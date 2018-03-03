@@ -1,0 +1,2 @@
+This code contains sample execution of oneshot timer and auto reload timer.
+Semaphores are used to control the order of execution of tasks.
