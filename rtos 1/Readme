@@ -1,0 +1,4 @@
+This program contains three tasks written in C using FREERTOS. 
+Task1 is about calculatine euclidian distance
+Task2 is about monitoring students in a class for a month
+Task3 is about logging power used for a month.
