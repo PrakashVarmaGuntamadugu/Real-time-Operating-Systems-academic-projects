@@ -1,0 +1,113 @@
+/* Code by Prakash Varma. */
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include<stdio.h>
+#include<conio.h>
+#include<math.h>
+#include<time.h>
+#include "semphr.h"
+
+/* Demo includes. */
+#include "supporting_functions.h"
+
+/* Used as a loop counter to create a very crude delay. */
+#define mainDELAY_LOOP_COUNT		( 0xffffff )
+
+/* The task functions. */
+void vTask1(void *pvParameters);
+void vTask2(void *pvParameters);
+void vTask3(void *pvParameters);
+
+
+int N = 100;
+int res = 50;
+
+SemaphoreHandle_t xMutex1 = 0;
+SemaphoreHandle_t xMutex2 = 0;
+UBaseType_t uxPriority;
+/*-----------------------------------------------------------*/
+
+int main(void)
+{
+	/* Create one of the two tasks. */
+	xMutex1 = xSemaphoreCreateCounting(3, 0);
+	xMutex2 = xSemaphoreCreateCounting(3, 0);
+	xTaskCreate(vTask1,		/* Pointer to the function that implements the task. */
+		"Task 1",	/* Text name for the task.  This is to facilitate debugging only. */
+		1000,		/* Stack depth - most small microcontrollers will use much less stack than this. */
+		NULL,		/* We are not using the task parameter. */
+		50,			/* This task will run at priority 50. */
+		NULL);		/* We are not using the task handle. */
+	xTaskCreate(vTask2,		/* Pointer to the function that implements the task. */
+		"Task 2",	/* Text name for the task.  This is to facilitate debugging only. */
+		1000,		/* Stack depth - most small microcontrollers will use much less stack than this. */
+		NULL,		/* We are not using the task parameter. */
+		100,			/* This task will run at priority 100. */
+		NULL);		/* We are not using the task handle. */
+					/* Create the other task in exactly the same way. */
+	xTaskCreate(vTask3,		/* Pointer to the function that implements the task. */
+		"Task 3",	/* Text name for the task.  This is to facilitate debugging only. */
+		1000,		/* Stack depth - most small microcontrollers will use much less stack than this. */
+		NULL,		/* We are not using the task parameter. */
+		150,			/* This task will run at priority 150. */
+		NULL);		/* We are not using the task handle. */
+
+					/* Start the scheduler to start the tasks executing. */
+	vTaskStartScheduler();
+
+	/* The following line should never be reached because vTaskStartScheduler()
+	will only return if there was not enough FreeRTOS heap memory available to
+	create the Idle and (if configured) Timer tasks.  Heap management, and
+	techniques for trapping heap exhaustion, are described in the book text. */
+	for (;; );
+	return 0;
+}
+/*-----------------------------------------------------------*/
+
+
+
+
+
+void vTask1(void *pvParameters)
+{
+	xSemaphoreTake(xMutex1, 100);
+	
+	const char *pcTaskName = "Task 1 is running\r\n";
+
+	pvParameters = pvParameters;
+	N = N + 3 * res;
+	res = res + 50;
+	printf("\n value of N for Task1 is %d", N);
+	printf("\n value of res for Task1 is %d", res);
+	xSemaphoreGive(xMutex2);
+}
+/*-----------------------------------------------------------*/
+
+void vTask2(void *pvParameters)
+{
+
+	
+	const char *pcTaskName = "Task 2 is running\r\n";
+	pvParameters = pvParameters;
+	N = N + 2 * N + 70;
+	printf("\nvalue of N for Task2 is %d", N);
+	printf("\nvalue of res for Task2 is %d", res);
+	xSemaphoreGive(xMutex1);
+
+}
+
+
+void vTask3(void *pvParameters)
+{
+	
+	xSemaphoreTake(xMutex2, 100);
+
+	const char *pcTaskName = "\r\n\n Task 3 Begins here";
+	pvParameters = pvParameters;
+
+	res = 5 * res;
+	printf("\nvalue of N for Task3 is %d", N);
+	printf("\nvalue of res for Task3 is %d", res);
+
+}

@@ -1,0 +1,143 @@
+/* Code by Prakash Varma. */
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include<stdio.h>
+#include<conio.h>
+#include<math.h>
+#include<time.h>
+#include "semphr.h"
+#include "timers.h"
+
+/* Demo includes. */
+#include "supporting_functions.h"
+
+/* Used as a loop counter to create a very crude delay. */
+#define mainDELAY_LOOP_COUNT		( 0xffffff )
+#define mainONE_SHOT_TIMER_PERIOD1 pdMS_TO_TICKS( 2000 )
+#define mainONE_SHOT_TIMER_PERIOD2 pdMS_TO_TICKS( 3000 )
+#define mainONE_SHOT_TIMER_PERIOD3 pdMS_TO_TICKS( 5000 )
+#define mainAUTO_RELOAD_TIMER_PERIOD pdMS_TO_TICKS( 1000 )
+
+
+
+/* The task functions. */
+void prvOneShotTimerCallback1(TimerHandle_t xTimer1);
+void prvOneShotTimerCallback2(TimerHandle_t xTimer2);
+void prvOneShotTimerCallback3(TimerHandle_t xTimer3);
+void prvAutoReloadTimerCallback(TimerHandle_t xTimer);
+
+
+int N = 100;
+int res = 50;
+
+
+/*-----------------------------------------------------------*/
+
+int main(void)
+
+{
+	TimerHandle_t xAutoReloadTimer, xOneShotTimer1, xOneShotTimer2, xOneShotTimer3;
+	BaseType_t xTimer1Started, xTimer2Started, xTimer3Started, xTimer4Started;
+
+	/* Start the scheduler to start the tasks executing. */
+
+	/* Create the one shot timer, storing the handle to the created timer in xOneShotTimer. */
+	xOneShotTimer1 = xTimerCreate(
+		/* Text name for the software timer - not used by FreeRTOS. */
+		"OneShot",
+		/* The software timer's period in ticks. */
+		mainONE_SHOT_TIMER_PERIOD1,
+		/* Setting uxAutoRealod to pdFALSE creates a one-shot software timer. */
+		pdFALSE,
+		/* This example does not use the timer id. */
+		0,
+		/* The callback function to be used by the software timer being created. */
+		prvOneShotTimerCallback1);
+	xOneShotTimer2 = xTimerCreate(
+		/* Text name for the software timer - not used by FreeRTOS. */
+		"OneShot",
+		/* The software timer's period in ticks. */
+		mainONE_SHOT_TIMER_PERIOD2,
+		/* Setting uxAutoRealod to pdFALSE creates a one-shot software timer. */
+		pdFALSE,
+		/* This example does not use the timer id. */
+		0,
+		/* The callback function to be used by the software timer being created. */
+		prvOneShotTimerCallback2);
+	xOneShotTimer3 = xTimerCreate(
+		/* Text name for the software timer - not used by FreeRTOS. */
+		"OneShot",
+		/* The software timer's period in ticks. */
+		mainONE_SHOT_TIMER_PERIOD3,
+		/* Setting uxAutoRealod to pdFALSE creates a one-shot software timer. */
+		pdFALSE,
+		/* This example does not use the timer id. */
+		0,
+		/* The callback function to be used by the software timer being created. */
+		prvOneShotTimerCallback3);
+	xAutoReloadTimer = xTimerCreate(
+		/* Text name for the software timer - not used by FreeRTOS. */
+		"AutoReload",
+		/* The software timer's period in ticks. */
+		mainAUTO_RELOAD_TIMER_PERIOD,
+		/* Setting uxAutoRealod to pdTRUE creates an auto-reload timer. */
+		pdTRUE,
+		/* This example does not use the timer id. */
+		0,
+		/* The callback function to be used by the software timer being created. */
+		prvAutoReloadTimerCallback);
+
+
+
+	if ((xOneShotTimer1 != NULL) && (xOneShotTimer2 != NULL) && (xOneShotTimer3 != NULL) && (xAutoReloadTimer != NULL))
+	{
+		/* Start the software timers, using a block time of 0 (no block time). The scheduler has
+		not been started yet so any block time specified here would be ignored anyway. */
+		xTimer1Started = xTimerStart(xOneShotTimer1, 0);
+		xTimer2Started = xTimerStart(xOneShotTimer2, 0);
+		xTimer3Started = xTimerStart(xOneShotTimer3, 0);
+		xTimer4Started = xTimerStart(xAutoReloadTimer, 0);
+		/* The implementation of xTimerStart() uses the timer command queue, and xTimerStart()
+		will fail if the timer command queue gets full. The timer service task does not get
+		created until the scheduler is started, so all commands sent to the command queue will
+		stay in the queue until after the scheduler has been started. Check both calls to
+		xTimerStart() passed. */
+		if ((xTimer1Started == pdPASS) && (xTimer2Started == pdPASS) && (xTimer3Started == pdPASS) && (xTimer4Started == pdPASS))
+		{
+			/* Start the scheduler. */
+			vTaskStartScheduler();
+		}
+	}
+	/* As always, this line should not be reached. */
+	for (;; );
+}
+/*-----------------------------------------------------------*/
+
+
+
+
+
+static void prvOneShotTimerCallback1(TimerHandle_t xTimer1)
+{
+	N = N + 3 * res;
+	res = res + 50;
+}
+/*-----------------------------------------------------------*/
+
+static void prvOneShotTimerCallback2(TimerHandle_t xTimer2)
+{
+	N = N + 2 * N + 70;
+}
+
+static void prvOneShotTimerCallback3(TimerHandle_t xTimer3)
+{
+	res = 5 * res;
+}
+static void prvAutoReloadTimerCallback(TimerHandle_t xTimer)
+{
+
+	printf("\n value of N for is %d", N);
+	printf("\n value of res for is %d", res);
+
+}
